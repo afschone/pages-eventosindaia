@@ -40,7 +40,12 @@ export async function GET(
       );
     }
 
-    return new NextResponse(page.html, {
+    // Corrige URL do tracking se estiver apontando pro frontend em vez do backend
+    const html = page.html
+      .replace(/https:\/\/indaia-crm\.vercel\.app\/api\/marketing-platform\/tracking/g, 'https://comercial-api.squareweb.app/api/marketing-platform/tracking')
+      .replace(/https:\/\/localhost:\d+\/api\/marketing-platform\/tracking/g, 'https://comercial-api.squareweb.app/api/marketing-platform/tracking');
+
+    return new NextResponse(html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
