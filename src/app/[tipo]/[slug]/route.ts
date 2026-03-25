@@ -64,7 +64,8 @@ export async function GET(
       if (html.includes('</head>')) {
         html = html.replace('</head>', utmScript + '</head>');
       } else if (html.includes('<body')) {
-        html = html.replace(/<body[^>]*>/, (match) => match + utmScript);
+        const bodyMatch = html.match(/<body[^>]*>/);
+        if (bodyMatch) html = html.replace(bodyMatch[0], bodyMatch[0] + utmScript);
       }
     }
 
