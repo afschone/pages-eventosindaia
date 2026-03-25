@@ -41,9 +41,32 @@ export async function GET(
     }
 
     // Corrige URL do tracking se estiver apontando pro frontend em vez do backend
-    const html = page.html
+    let html = page.html
       .replace(/https:\/\/indaia-crm\.vercel\.app\/api\/marketing-platform\/tracking/g, 'https://comercial-api.squareweb.app/api/marketing-platform/tracking')
       .replace(/https:\/\/localhost:\d+\/api\/marketing-platform\/tracking/g, 'https://comercial-api.squareweb.app/api/marketing-platform/tracking');
+
+    // Injeta captura de UTMs se o HTML não tem (LPs antigas)
+    if (!html.includes("p.get('utm_source')") && !html.includes('utm_source=p.get')) {
+      const utmScript = `<script>
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  var utms={utm_source:p.get('utm_source'),utm_medium:p.get('utm_medium'),utm_campaign:p.get('utm_campaign'),utm_content:p.get('utm_content'),utm_term:p.get('utm_term')};
+  var orig=window.fetch;
+  window.fetch=function(url,opts){
+    if(url&&url.indexOf('marketing-platform/tracking')>-1&&opts&&opts.body){
+      try{var d=JSON.parse(opts.body);Object.assign(d,utms);opts.body=JSON.stringify(d)}catch(e){}
+    }
+    return orig.call(this,url,opts);
+  };
+})();
+</script>`;
+      // Injeta logo após o <head> ou no início do <body>
+      if (html.includes('</head>')) {
+        html = html.replace('</head>', utmScript + '</head>');
+      } else if (html.includes('<body')) {
+        html = html.replace(/<body[^>]*>/, (match) => match + utmScript);
+      }
+    }
 
     return new NextResponse(html, {
       status: 200,
