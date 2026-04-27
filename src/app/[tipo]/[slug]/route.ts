@@ -45,6 +45,17 @@ export async function GET(
       .replace(/https:\/\/indaia-crm\.vercel\.app\/api\/marketing-platform\/tracking/g, 'https://comercial-api.squareweb.app/api/marketing-platform/tracking')
       .replace(/https:\/\/localhost:\d+\/api\/marketing-platform\/tracking/g, 'https://comercial-api.squareweb.app/api/marketing-platform/tracking');
 
+    // Injeta favicon universal se a LP não tem
+    if (!/<link[^>]+rel=["'](?:shortcut )?icon["']/i.test(html)) {
+      const faviconTag = '<link rel="icon" type="image/svg+xml" href="/favicon.svg">';
+      if (html.includes('</head>')) {
+        html = html.replace('</head>', faviconTag + '</head>');
+      } else if (html.includes('<body')) {
+        const bodyMatch = html.match(/<body[^>]*>/);
+        if (bodyMatch) html = html.replace(bodyMatch[0], faviconTag + bodyMatch[0]);
+      }
+    }
+
     // Injeta captura de UTMs se o HTML não tem (LPs antigas)
     if (!html.includes("p.get('utm_source')") && !html.includes('utm_source=p.get')) {
       const utmScript = `<script>
